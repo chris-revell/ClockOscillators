@@ -15,7 +15,7 @@
 
 using DynamicalSystems
 using DifferentialEquations
-using Makie
+using GLMakie
 using DataStructures: CircularBuffer
 
 # Function defining ODEs for model
@@ -101,7 +101,7 @@ lsgrid = labelslidergrid!(
     [0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:2, 0:0.1:2];
     formats = [x -> "$(round(x, digits = 1))$s" for s in ["π", "π", "π", "π", "π", "", "", "", "", "π", "π"]],
     width = 350,
-    #tellheight = false
+    tellheight = false
 )
 fig[1, 2] = lsgrid.layout
 # Set default slider values
