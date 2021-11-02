@@ -17,6 +17,10 @@ using DynamicalSystems
 using DifferentialEquations
 using GLMakie
 using DataStructures: CircularBuffer
+using Images: load
+using FileIO
+
+δt = 0.005
 
 # Function defining ODEs for model
 function model!(du, u, p, t)
@@ -41,44 +45,83 @@ end
 function progress_for_one_step!(integ)
     step!(integ)
     u = integ.u
-    return xycoords(u)
+    return u
 end
 
 # Function to update figure based on system iteration
-function animstep!(integ, dots, hands)
-    x1,x2,x3,y1,y2,y3 = progress_for_one_step!(integ)
+function animstep!(integ, dots, hands, sunPhaseLine)
+    u = progress_for_one_step!(integ)
+	x1,x2,x3,y1,y2,y3 = xycoords(u)
     dots[] = [Point2f0(x1, y1), Point2f0(x2, y2), Point2f0(x3, y3)]
 	hands[] = [Point2f0(x1, y1), Point2f0(0,0), Point2f0(x2, y2), Point2f0(0, 0), Point2f0(x3,y3)]
+
+	sunPhaseLine[].-=Point2f0(δt,0.0)
+	fPhaseLine[].-=Point2f0(δt,0.0)
+	mPhaseLine[].-=Point2f0(δt,0.0)
+	sunPhaseLine[] = sunPhaseLine[]
+	fPhaseLine[] = fPhaseLine[]
+	mPhaseLine[] = mPhaseLine[]
+	push!(sunPhaseLine[],Point2f0(0.0,sin(u[1])))
+	push!(fPhaseLine[],Point2f0(0.0,sin(u[2])))
+	push!(mPhaseLine[],Point2f0(0.0,sin(u[3])))
+	sunPhaseLine[] = sunPhaseLine[]
+	fPhaseLine[] = fPhaseLine[]
+	mPhaseLine[] = mPhaseLine[]
 end
 
 # Set up figure canvas
-fig = Figure(); display(fig)
-ax1 = Axis(fig[1,1])
-ax1.title = "Circadian Rhythms"
-ax1.aspect = DataAspect() # ??
+fig = Figure(resolution = (1000, 1100))
+ga = fig[1,1] = GridLayout()
 lim = 1.1 # Plot canvas limit
-xlims!(ax1, -lim, lim)
-ylims!(ax1, -lim, lim)
-lines!(ax1,[Point2f0(0.0,lim),Point2f0(0.0,-lim)]; linestyle=:dash, alpha=0.5, color=:black)
-lines!(ax1,[Point2f0(lim,0.0),Point2f0(-lim,0.0)]; linestyle=:dash, alpha=0.5, color=:black)
-hidedecorations!(ax1)
+
+# Add phase plot
+axPhase = Axis(ga[2,1],title="Circadian Rhythms",aspect=DataAspect(),xlims=(-lim,lim),ylims=(-lim,lim))
+lines!(axPhase,[Point2f0(0.0,lim),Point2f0(0.0,-lim)]; linestyle=:dash, alpha=0.5, color=:black)
+lines!(axPhase,[Point2f0(lim,0.0),Point2f0(-lim,0.0)]; linestyle=:dash, alpha=0.5, color=:black)
+hidedecorations!(axPhase)
+
+# Add static system diagram to canvas
+axDiagram = Axis(ga[2,2],title="System diagram",aspect=DataAspect())
+image!(axDiagram,rotr90(load("_research/ClockOscillators.png")))
+hidedecorations!(axDiagram)
 
 # Set up phase line plot
-# ax2 = Axis(fig[2,1])
-# xlims!(ax2, -5.0, 0.0)
-# ylims!(ax2, π, -π)
-# lineLength = ceil(Int64,5.0÷0.005) # length of plotted trajectory, in units of dt
-# sunPhaseLine = Observable(CircularBuffer{Point2f0}(lineLength))
-# mPhaseLine = Observable(CircularBuffer{Point2f0}(lineLength))
-# fPhaseLine = Observable(CircularBuffer{Point2f0}(lineLength))
-# for i=1:lineLength
-# 	push!(sunPhaseLine[],Point2f0((i-1)*0.005,π))
-# 	push!(mPhaseLine[],Point2f0((i-1)*0.005,0.0))
-# 	push!(fPhaseLine[],Point2f0((i-1)*0.005,-π))
-# end
-# lines!(ax2, sunPhaseLine)
-# lines!(ax2, mPhaseLine)
-# lines!(ax2, fPhaseLine)
+axLine = Axis(ga[3,1],xlims=(-5.0,0.0),ylims=(-1.0,1.0))
+nDays = 3.0
+lineLength = round(Int64,nDays/δt) # length of plotted trajectory, in units of dt
+sunPhaseLine = CircularBuffer{Point2f0}(lineLength)
+fPhaseLine = CircularBuffer{Point2f0}(lineLength)
+mPhaseLine = CircularBuffer{Point2f0}(lineLength)
+fill!(sunPhaseLine,Point2f0(rand(),rand()))
+fill!(fPhaseLine,Point2f0(rand(),rand()))
+fill!(mPhaseLine,Point2f0(rand(),rand()))
+for i=1:lineLength
+	push!(sunPhaseLine,Point2f0((1-lineLength+i)*0.005,0.0))
+	push!(fPhaseLine,Point2f0((1-lineLength+i)*0.005,0.0))
+	push!(mPhaseLine,Point2f0((1-lineLength+i)*0.005,0.0))
+end
+sunPhaseLine = Observable(sunPhaseLine)
+fPhaseLine = Observable(fPhaseLine)
+mPhaseLine = Observable(mPhaseLine)
+lines!(axLine, sunPhaseLine; color=:red, linewidth=4, alpha=0.75)
+lines!(axLine, fPhaseLine; color=:green, linewidth=4, alpha=0.75)
+lines!(axLine, mPhaseLine; color=:blue, linewidth=4, alpha=0.75)
+
+
+
+# Set up parameter sliders
+lsgrid = labelslidergrid!(
+    fig,
+    ["ω0", "ωF", "ωM", "ϕF", "ϕM", "μ", "ν", "αF", "αM", "ψF", "ψM"],
+    [0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:2, 0:0.1:2];
+    formats = [x -> "$(round(x, digits = 1))$s" for s in ["π", "π", "π", "π", "π", "", "", "", "", "π", "π"]],
+)
+ga[3, 2] = lsgrid.layout
+# Set default slider values
+defaults = [2.0, 2.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+set_close_to!.(lsgrid.sliders, defaults)
+# Pull parameters from slider positions [ω0, ωF, ωM, ϕF, ϕM, μ, ν, αF, αM, ψF, ψM]
+sliderobservables = [s.value for s in lsgrid.sliders]
 
 
 # Initial conditions
@@ -90,44 +133,28 @@ dots = Observable([Point2f0(x1, y1), Point2f0(x2, y2), Point2f0(x3, y3)])
 # 3 lines corresponding to a clock hand for each cell type
 hands= Observable([Point2f0(x1, y1), Point2f0(0,0), Point2f0(x2, y2), Point2f0(0, 0), Point2f0(x3,y3)])
 # Plot objects
-lines!(ax1, hands; linewidth = 4, color = :black)
-scatter!(ax1,dots;marker=[:star8,:circle,:circle],color=[:red,:green,:blue],markersize=48)
-
-
-# Set up parameter sliders
-lsgrid = labelslidergrid!(
-    fig,
-    ["ω0", "ωF", "ωM", "ϕF", "ϕM", "μ", "ν", "αF", "αM", "ψF", "ψM"],
-    [0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:2, 0:0.1:2];
-    formats = [x -> "$(round(x, digits = 1))$s" for s in ["π", "π", "π", "π", "π", "", "", "", "", "π", "π"]],
-    width = 350,
-    tellheight = false
-)
-fig[1, 2] = lsgrid.layout
-# Set default slider values
-defaults = [2.0, 2.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-set_close_to!.(lsgrid.sliders, defaults)
-
-# Pull parameters from slider positions [ω0, ωF, ωM, ϕF, ϕM, μ, ν, αF, αM, ψF, ψM]
-sliderobservables = [s.value for s in lsgrid.sliders]
-
+lines!(axPhase, hands; linewidth = 4, color = :black)
+scatter!(axPhase, dots; marker=[:star8,:circle,:circle],color=[:red,:green,:blue],markersize=48)
 
 # Set up differential equation integrator
 prob = ODEProblem(model!,u0,(0.0,10000.0),sliderobservables)
 dp = ContinuousDynamicalSystem(prob)
 # Solve diffeq with constant step for smoother curves
-diffeq = (alg = Tsit5(), adaptive = false, dt = 0.005)
+diffeq = (alg = Tsit5(), adaptive = false, dt = δt)
 # Set up integrator for each iteration
 integ = integrator(dp, u0; diffeq...)
 
 
-run = Button(fig[2,2]; label = "Start/Stop")#, tellwidth = false)
+# Add stop/start button to the top of the canvas
+run = Button(ga[1,1:2]; label = "Start/Stop", tellwidth = false)
 isrunning = Observable(false)
 on(run.clicks) do clicks; isrunning[] = !isrunning[]; end
 on(run.clicks) do clicks
     @async while isrunning[]
         isopen(fig.scene) || break # ensures computations stop if closed window
-        animstep!(integ, dots, hands)
+        animstep!(integ, dots, hands, sunPhaseLine)
         sleep(0.02) # or `yield()` instead
     end
 end
+
+display(fig)
