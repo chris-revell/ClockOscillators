@@ -75,7 +75,9 @@ ga = fig[1,1] = GridLayout()
 lim = 1.1 # Plot canvas limit
 
 # Add phase plot
-axPhase = Axis(ga[2,1],title="Circadian Rhythms",aspect=DataAspect(),xlims=(-lim,lim),ylims=(-lim,lim))
+axPhase = Axis(ga[2,1],title="Circadian Rhythms",aspect=DataAspect())
+xlims!(axPhase,(-lim,lim))
+ylims!(axPhase,(-lim,lim))
 lines!(axPhase,[Point2f0(0.0,lim),Point2f0(0.0,-lim)]; linestyle=:dash, alpha=0.5, color=:black)
 lines!(axPhase,[Point2f0(lim,0.0),Point2f0(-lim,0.0)]; linestyle=:dash, alpha=0.5, color=:black)
 hidedecorations!(axPhase)
@@ -86,7 +88,9 @@ image!(axDiagram,rotr90(load("_research/ClockOscillators.png")))
 hidedecorations!(axDiagram)
 
 # Set up phase line plot
-axLine = Axis(ga[3,1],xlims=(-5.0,0.0),ylims=(-1.0,1.0))
+axLine = Axis(ga[3,1])
+xlims!(axLine,(-5.0,0.0))
+ylims!(axLine,(-1.0,1.0))
 nDays = 3.0
 lineLength = round(Int64,nDays/δt) # length of plotted trajectory, in units of dt
 sunPhaseLine = CircularBuffer{Point2f0}(lineLength)
