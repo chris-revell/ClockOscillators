@@ -1,3 +1,10 @@
+#
+#  ClocksGui.jl
+#  ClockOscillators
+#
+#  Created by Christopher Revell on 27/10/2021.
+#
+#
 # With components adapted from https://gist.github.com/Datseris/4b9d25a3ddb3936d3b83d3037f8188dd
 
 # ω0  Sunlight phase rate of change /day
@@ -89,7 +96,7 @@ hidedecorations!(axDiagram)
 
 # Set up phase line plot
 axLine = Axis(ga[3,1])
-xlims!(axLine,(-5.0,0.0))
+xlims!(axLine,(-3.0,0.0))
 ylims!(axLine,(-1.0,1.0))
 nDays = 3.0
 lineLength = round(Int64,nDays/δt) # length of plotted trajectory, in units of dt
