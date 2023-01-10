@@ -59,18 +59,18 @@ end
 function animstep!(integ, dots, hands, sunPhaseLine)
     u = progress_for_one_step!(integ)
 	x1,x2,x3,y1,y2,y3 = xycoords(u)
-    dots[] = [Point2f0(x1, y1), Point2f0(x2, y2), Point2f0(x3, y3)]
-	hands[] = [Point2f0(x1, y1), Point2f0(0,0), Point2f0(x2, y2), Point2f0(0, 0), Point2f0(x3,y3)]
+    dots[] = [Point2f(x1, y1), Point2f(x2, y2), Point2f(x3, y3)]
+	hands[] = [Point2f(x1, y1), Point2f(0,0), Point2f(x2, y2), Point2f(0, 0), Point2f(x3,y3)]
 
-	sunPhaseLine[].-=Point2f0(δt,0.0)
-	fPhaseLine[].-=Point2f0(δt,0.0)
-	mPhaseLine[].-=Point2f0(δt,0.0)
+	sunPhaseLine[].-=Point2f(δt,0.0)
+	fPhaseLine[].-=Point2f(δt,0.0)
+	mPhaseLine[].-=Point2f(δt,0.0)
 	sunPhaseLine[] = sunPhaseLine[]
 	fPhaseLine[] = fPhaseLine[]
 	mPhaseLine[] = mPhaseLine[]
-	push!(sunPhaseLine[],Point2f0(0.0,sin(u[1])))
-	push!(fPhaseLine[],Point2f0(0.0,sin(u[2])))
-	push!(mPhaseLine[],Point2f0(0.0,sin(u[3])))
+	push!(sunPhaseLine[],Point2f(0.0,sin(u[1])))
+	push!(fPhaseLine[],Point2f(0.0,sin(u[2])))
+	push!(mPhaseLine[],Point2f(0.0,sin(u[3])))
 	sunPhaseLine[] = sunPhaseLine[]
 	fPhaseLine[] = fPhaseLine[]
 	mPhaseLine[] = mPhaseLine[]
@@ -85,8 +85,8 @@ lim = 1.1 # Plot canvas limit
 axPhase = Axis(ga[2,1],title="Circadian Rhythms",aspect=DataAspect())
 xlims!(axPhase,(-lim,lim))
 ylims!(axPhase,(-lim,lim))
-lines!(axPhase,[Point2f0(0.0,lim),Point2f0(0.0,-lim)]; linestyle=:dash, alpha=0.5, color=:black)
-lines!(axPhase,[Point2f0(lim,0.0),Point2f0(-lim,0.0)]; linestyle=:dash, alpha=0.5, color=:black)
+lines!(axPhase,[Point2f(0.0,lim),Point2f(0.0,-lim)]; linestyle=:dash, alpha=0.5, color=:black)
+lines!(axPhase,[Point2f(lim,0.0),Point2f(-lim,0.0)]; linestyle=:dash, alpha=0.5, color=:black)
 hidedecorations!(axPhase)
 
 # Add static system diagram to canvas
@@ -100,16 +100,16 @@ xlims!(axLine,(-3.0,0.0))
 ylims!(axLine,(-1.0,1.0))
 nDays = 3.0
 lineLength = round(Int64,nDays/δt) # length of plotted trajectory, in units of dt
-sunPhaseLine = CircularBuffer{Point2f0}(lineLength)
-fPhaseLine = CircularBuffer{Point2f0}(lineLength)
-mPhaseLine = CircularBuffer{Point2f0}(lineLength)
-fill!(sunPhaseLine,Point2f0(rand(),rand()))
-fill!(fPhaseLine,Point2f0(rand(),rand()))
-fill!(mPhaseLine,Point2f0(rand(),rand()))
+sunPhaseLine = CircularBuffer{Point2f}(lineLength)
+fPhaseLine = CircularBuffer{Point2f}(lineLength)
+mPhaseLine = CircularBuffer{Point2f}(lineLength)
+fill!(sunPhaseLine,Point2f(rand(),rand()))
+fill!(fPhaseLine,Point2f(rand(),rand()))
+fill!(mPhaseLine,Point2f(rand(),rand()))
 for i=1:lineLength
-	push!(sunPhaseLine,Point2f0((1-lineLength+i)*0.005,0.0))
-	push!(fPhaseLine,Point2f0((1-lineLength+i)*0.005,0.0))
-	push!(mPhaseLine,Point2f0((1-lineLength+i)*0.005,0.0))
+	push!(sunPhaseLine,Point2f((1-lineLength+i)*0.005,0.0))
+	push!(fPhaseLine,Point2f((1-lineLength+i)*0.005,0.0))
+	push!(mPhaseLine,Point2f((1-lineLength+i)*0.005,0.0))
 end
 sunPhaseLine = Observable(sunPhaseLine)
 fPhaseLine = Observable(fPhaseLine)
@@ -140,9 +140,9 @@ u0   = rand(3).*(2π) # Initial phases (Sunlight, fibroblast, macrophage)
 # Plot initial conditions as a vector of observable points.
 x1,x2,x3,y1,y2,y3 = xycoords(u0)
 # 3 points: one for each cell type
-dots = Observable([Point2f0(x1, y1), Point2f0(x2, y2), Point2f0(x3, y3)])
+dots = Observable([Point2f(x1, y1), Point2f(x2, y2), Point2f(x3, y3)])
 # 3 lines corresponding to a clock hand for each cell type
-hands= Observable([Point2f0(x1, y1), Point2f0(0,0), Point2f0(x2, y2), Point2f0(0, 0), Point2f0(x3,y3)])
+hands= Observable([Point2f(x1, y1), Point2f(0,0), Point2f(x2, y2), Point2f(0, 0), Point2f(x3,y3)])
 # Plot objects
 lines!(axPhase, hands; linewidth = 4, color = :black)
 scatter!(axPhase, dots; marker=[:star8,:circle,:circle],color=[:red,:green,:blue],markersize=48)
