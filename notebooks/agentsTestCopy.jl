@@ -23,8 +23,8 @@ function agent_step!(cell, model)
     # Calculate behaviour properties based on neighbors
     for id in neighbor_ids
         neighborPos = model[id].pos
-        separationVector = cell.pos - neighborPos        
-        cell.vel = cell.vel + separationVector*LJ(norm(separationVector),cell.separation,1.0)/norm(separationVector)
+        separationVector = cell.pos .- neighborPos        
+        cell.vel = cell.vel .+ separationVector.*(LJ(norm(separationVector),cell.separation,1.0)/norm(separationVector))
     end
     # Move cell according to new velocity and speed
     move_agent!(cell, model, norm(cell.vel))
@@ -44,7 +44,6 @@ figure, = abmplot(model)
 
 abmvideo(
     "flocking.mp4", model, agent_step!;
-    am=cell_marker,
     framerate=20, frames=100,
     title="Flocking"
 )
