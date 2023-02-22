@@ -1,6 +1,9 @@
-using Agents, LinearAlgebra
+using Agents
+using LinearAlgebra
+using InteractiveDynamics
+using CairoMakie
 
-LJ(r,σ,ϵ) = 24*ϵ*(σ^6/r^7 - 2*σ^12/r^13)
+dxLJ(r,σ,ϵ) = 24*ϵ*(σ^6/r^7 - 2*σ^12/r^13)
 
 @agent Cell ContinuousAgent{2} begin
     separation::Float64
@@ -24,20 +27,11 @@ function agent_step!(cell, model)
     for id in neighbor_ids
         neighborPos = model[id].pos
         separationVector = cell.pos .- neighborPos        
-        cell.vel = cell.vel .+ separationVector.*(LJ(norm(separationVector),cell.separation,1.0)/norm(separationVector))
+        cell.vel = cell.vel .+ separationVector.*(dxLJ(norm(separationVector),cell.separation,1.0)/norm(separationVector))
     end
     # Move cell according to new velocity and speed
     move_agent!(cell, model, norm(cell.vel))
 end
-
-using InteractiveDynamics
-using CairoMakie
-
-# const cell_polygon = Polygon(Point2f[(-0.5, -0.5), (1, 0), (-0.5, 0.5)])
-# function cell_marker(b::cell)
-#     φ = atan(b.vel[2], b.vel[1]) #+ π/2 + π
-#     scale(rotate2D(cell_polygon, φ), 2)
-# end
 
 model = initialize_model()
 figure, = abmplot(model)
