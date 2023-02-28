@@ -13,13 +13,22 @@ module CouplingStrength
 using DrWatson
 using FromFile
 using UnPack
+using Agents
 
 # Local modules
-# @from "$(projectdir("src",".jl"))" using 
+@from "$(projectdir("src","CellAgents.jl"))" using CellAgents
 
-function couplingStrength(cell1,cell2,model,properties)
-    @unpack λ, μ, ν, ξ, ω, dt = properties
-    if cell1.type==
+function couplingStrength(cell1,cell2,properties)
+    @unpack λ, μ, ν, ξ = properties
+    if cell1.type==:fibroblast && cell2.type==:fibroblast
+        return λ
+    elseif cell1.type==:fibroblast && cell2.type==:macrophage
+        return μ
+    elseif cell1.type==:macrophage && cell2.type==:macrophage
+        return ν
+    elseif cell1.type==:macrophage && cell2.type==:fibroblast
+        return ξ
+    end
 end
 
 export couplingStrength
