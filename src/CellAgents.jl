@@ -12,7 +12,6 @@ module CellAgents
 # Julia packages
 using DrWatson
 using FromFile
-using UnPack
 using Agents
 
 @agent Cell ContinuousAgent{2} begin

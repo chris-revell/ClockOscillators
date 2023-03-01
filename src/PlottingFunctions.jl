@@ -14,7 +14,7 @@ using DrWatson
 using FromFile
 using UnPack
 using Agents
-using ColourSchemes
+using ColorSchemes
 using CairoMakie
 
 # Local modules
@@ -30,7 +30,8 @@ end
 
 function cellClockColour(c::Cell)
     cyclePoint = ceil(Int64,(c.clockPhase/2π)*256)
-    return ColorSchemes.cyclic_wrwbw_40_90_c42_n256_s25.colors[cyclePoint]
+    # return ColorSchemes.cyclic_wrwbw_40_90_c42_n256_s25.colors[cyclePoint]
+    return ColorSchemes.romaO.colors[cyclePoint]
 end
 
 export cellMarker, cellClockColour

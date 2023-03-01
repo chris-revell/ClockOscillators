@@ -20,10 +20,11 @@ using Agents
 @from "$(projectdir("src","UpdateClock.jl"))" using UpdateClock
 
 function agentStep!(cell, model)
-    updateClock(cell,model.dt)
+    @unpack dt = model.properties
+    updateClock(cell,model)
+    
     cell.vel = Tuple((rand(model.rng,2).-0.5).*cell.speed)
-    # Move bird according to new velocity and speed
-    move_agent!(cell, model, model.dt)
+    move_agent!(cell, model, dt)
 end
 
 export agentStep!

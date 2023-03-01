@@ -44,7 +44,7 @@ function initialize_model(;
     speedMacrophage=1.0, 
     speedFibroblast=1.0, 
     extent=(100, 100), 
-    dt=0.1
+    dt=0.1,
     ω=2π,
     μ=1.0,
     ν=1.0,

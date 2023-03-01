@@ -19,11 +19,11 @@ using Agents
 @from "$(projectdir("src","CellAgents.jl"))" using CellAgents
 @from "$(projectdir("src","CouplingStrength.jl"))" using CouplingStrength
 
-function updateClock(cell,model,properties)
-    @unpack λ, μ, ν, ξ, ω, dt = properties
-    neighborIDs = nearby_ids(cell, model, model.couplingThreshold)
+function updateClock(cell,model)
+    @unpack couplingThreshold, dt, ω = model.properties
+    neighborIDs = nearby_ids(cell, model, couplingThreshold)
     for n in neighborIDs
-        cell.clockPhase = cell.clockPhase + couplingStrength(cell,model[n],properties)*sin(model[n].clockPhase-cell.clockPhase)*dt
+        cell.clockPhase = cell.clockPhase + couplingStrength(cell,model[n],model.properties)*sin(model[n].clockPhase-cell.clockPhase)*dt
     end
     cell.clockPhase = (cell.clockPhase + ω*dt)%2π
 end

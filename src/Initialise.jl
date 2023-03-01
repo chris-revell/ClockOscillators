@@ -16,14 +16,14 @@ using UnPack
 using Agents
 
 # Local modules
+@from "$(projectdir("src","CellAgents.jl"))" using CellAgents
 @from "$(projectdir("src","PlottingFunctions.jl"))" using PlottingFunctions
     
-function initialise(;couplingThreshold=10.0, nMacrophage=50, nFibroblast=50, speedMacrophage=1.0, speedFibroblast=1.0, extent=(100, 100), dt=0.1, ω=2π, μ=1.0, ν=1.0,)
+function initialise(properties)
     
-    space2d = ContinuousSpace(extent)
+    @unpack nMacrophage,nFibroblast,speedMacrophage,speedFibroblast,extent = properties
     
-    properties = (couplingThreshold,nMacrophage,nFibroblast,speedMacrophage,speedFibroblast,extent,dt,ω,μ,ν)
-    
+    space2d = ContinuousSpace(extent,periodic = false)
     model = ABM(Cell, space2d, properties=properties, scheduler=Schedulers.Randomly())
     # Add macrophages    
     for _ in 1:nMacrophage
@@ -40,8 +40,6 @@ function initialise(;couplingThreshold=10.0, nMacrophage=50, nFibroblast=50, spe
     end
 
     return model
-
-end
 
 end
 
