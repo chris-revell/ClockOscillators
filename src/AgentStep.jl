@@ -5,7 +5,7 @@
 #  Created by Christopher Revell on 28/02/2023.
 #
 #
-# 
+# Update the state of an agent at each timestep
 
 module AgentStep
 
@@ -14,6 +14,7 @@ using DrWatson
 using FromFile
 using UnPack
 using Agents
+using LinearAlgebra
 
 # Local modules
 @from "$(projectdir("src","CellAgents.jl"))" using CellAgents
@@ -21,9 +22,10 @@ using Agents
 
 function agentStep!(cell, model)
     @unpack dt = model.properties
+    # Update agent's internal clock based on system state
     updateClock(cell,model)
-    
-    cell.vel = Tuple((rand(model.rng,2).-0.5).*cell.speed)
+    # Select a random direction for 
+    cell.vel = Tuple(normalize(rand(model.rng,2).-0.5).*cell.speed)
     move_agent!(cell, model, dt)
 end
 
