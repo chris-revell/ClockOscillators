@@ -24,7 +24,21 @@ using InteractiveDynamics
 @from "$(projectdir("src","Initialise.jl"))" using Initialise
 @from "$(projectdir("src","PlottingFunctions.jl"))" using PlottingFunctions
 
-function clockOscillators(;tMax=10.0, couplingThreshold=10.0, nMacrophage=50, nFibroblast=50, speedMacrophage=100.0, speedFibroblast=100.0, extent=(100, 100), dt=0.01, ω=2π, λ=0.1, μ=1.0, ν=1.0, ξ=0.1)
+function clockOscillators(;
+    tMax=10.0, 
+    couplingThreshold=10.0, 
+    nMacrophage=50, 
+    nFibroblast=50, 
+    speedMacrophage=100.0, 
+    speedFibroblast=100.0, 
+    extent=(100, 100), 
+    dt=0.01, 
+    ω=2π, 
+    λ=0.1, 
+    μ=1.0, 
+    ν=1.0, 
+    ξ=0.1
+)
     properties = Dict{String,Any}()
     @pack! properties = tMax,couplingThreshold,nMacrophage,nFibroblast,speedMacrophage,speedFibroblast,extent,dt,ω,λ,μ,ν,ξ
     model = initialise(properties)
