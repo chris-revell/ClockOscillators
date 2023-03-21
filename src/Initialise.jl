@@ -18,10 +18,19 @@ using Agents
 # Local modules
 @from "$(projectdir("src","CellAgents.jl"))" using CellAgents
 @from "$(projectdir("src","PlottingFunctions.jl"))" using PlottingFunctions
+@from "$(projectdir("src","CreateLaplacian.jl"))" using CreateLaplacian
+@from "$(projectdir("src","DiffusionModel.jl"))" using DiffusionModel
     
 function initialise(properties)
     
-    @unpack nMacrophage,nFibroblast,speedMacrophage,speedFibroblast,extent = properties
+    @unpack nMacrophage,nFibroblast,speedMacrophage,speedFibroblast,extent,nX = properties
+
+    dx = (extent[2]-extent[1])/nX
+    properties[:diffGrid] = zeros(Float64,(nX,nX))
+    properties[:∇²] = createLaplacian(nX, nX, dx)
+    properties[:xs] = [extent[1]-0.5*dx+i*dx for i=1:nX]
+
+    
     
     space2d = ContinuousSpace(extent,periodic = false)
     model = ABM(Cell, space2d, properties=properties, scheduler=Schedulers.Randomly())
