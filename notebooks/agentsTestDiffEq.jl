@@ -1,89 +1,134 @@
-using Agents, LinearAlgebra
-
-@agent Bird ContinuousAgent{2} begin
-    speed::Float64
-    cohere_factor::Float64
-    separation::Float64
-    separate_factor::Float64
-    match_factor::Float64
-    visual_distance::Float64
-end
-
-function initialize_model(;
-    n_birds=100,
-    speed=1.0,
-    cohere_factor=0.25,
-    separation=4.0,
-    separate_factor=0.25,
-    match_factor=0.01,
-    visual_distance=5.0,
-    extent=(100, 100)
-)
-    space2d = ContinuousSpace(extent; spacing=visual_distance / 1.5)
-    model = ABM(Bird, space2d, scheduler=Schedulers.Randomly())
-    for _ in 1:n_birds
-        vel = Tuple(rand(model.rng, 2) * 2 .- 1)
-        add_agent!(
-            model,
-            vel,
-            speed,
-            cohere_factor,
-            separation,
-            separate_factor,
-            match_factor,
-            visual_distance,
-        )
-    end
-    return model
-end
-
-function agent_step!(bird, model)
-    # Obtain the ids of neighbors within the bird's visual distance
-    neighbor_ids = nearby_ids(bird, model, bird.visual_distance)
-    N = 0
-    match = separate = cohere = (0.0, 0.0)
-    # Calculate behaviour properties based on neighbors
-    for id in neighbor_ids
-        N += 1
-        neighbor = model[id].pos
-        heading = neighbor .- bird.pos
-
-        # `cohere` computes the average position of neighboring birds
-        cohere = cohere .+ heading
-        if euclidean_distance(bird.pos, neighbor, model) < bird.separation
-            # `separate` repels the bird away from neighboring birds
-            separate = separate .- heading
-        end
-        # `match` computes the average trajectory of neighboring birds
-        match = match .+ model[id].vel
-    end
-    N = max(N, 1)
-    # Normalise results based on model input and neighbor count
-    cohere = cohere ./ N .* bird.cohere_factor
-    separate = separate ./ N .* bird.separate_factor
-    match = match ./ N .* bird.match_factor
-    # Compute velocity based on rules defined above
-    bird.vel = (bird.vel .+ cohere .+ separate .+ match) ./ 2
-    bird.vel = bird.vel ./ norm(bird.vel)
-    # Move bird according to new velocity and speed
-    move_agent!(bird, model, bird.speed)
-end
-
-using InteractiveDynamics
+using Agents
+using Distributions
 using CairoMakie
+# using OrdinaryDiffEq
+using DifferentialEquations
 
-const bird_polygon = Polygon(Point2f[(-0.5, -0.5), (1, 0), (-0.5, 0.5)])
-function bird_marker(b::Bird)
-    φ = atan(b.vel[2], b.vel[1]) #+ π/2 + π
-    scale(rotate2D(bird_polygon, φ), 2)
+mutable struct Fisher <: AbstractAgent
+    id::Int
+    competence::Int
+    yearly_catch::Float64
 end
 
-model = initialize_model()
-figure, = abmplot(model; am=bird_marker)
+function agent_step!(agent, model)
+    if model.tick % 365 == 0
+        agent.yearly_catch = rand(model.rng, Poisson(agent.competence))
+    end
+end
 
-abmvideo(
-    "flocking.mp4", model, agent_step!;
-    am=bird_marker,
-    framerate=20, frames=100,
-    title="Flocking"
+function dstock(model)
+    # Only allow fishing if stocks are high enough
+    # (monitored yearly, so this will return 0 364 days of the year)
+    h = model.tick % 365 == 0 && model.stock > model.min_threshold ? sum(a.yearly_catch for a in allagents(model)) : 0.0
+
+    model.stock * (1 - (model.stock / model.max_population)) - h
+end
+
+function model_step!(model)
+    model.tick += 1
+    model.stock += dstock(model)
+end
+
+# function initialise(;
+#     stock = 400.0, # Initial population of fish (lets move to an equilibrium position)
+#     max_population = 500.0, # Maximum value of fish stock
+#     min_threshold = 60.0, # Regulate fishing if population drops below this value
+#     nagents = 50,
+# )
+#     model = ABM(
+#         Fisher;
+#         properties = Dict(
+#             :stock => stock,
+#             :max_population => max_population,
+#             :min_threshold => min_threshold,
+#             :tick => 0, # Time keeper in units of days
+#         ),
+#     )
+#     for _ in 1:nagents
+#         add_agent!(model, floor(rand(model.rng, truncated(LogNormal(), 1, 6))), 0.0)
+#     end
+#     model
+# end
+
+# model = initialise()
+# yearly(model, s) = s % 365 == 0
+# _, results = run!(model, agent_step!, model_step!, 20 * 365; mdata = [:stock], when = yearly)
+
+# f = Figure(resolution = (600, 400))
+# ax =
+#     f[1, 1] = Axis(
+#         f,
+#         xlabel = "Year",
+#         ylabel = "Stock",
+#         title = "Fishery Inventory",
+#     )
+# lines!(ax, results.stock, linewidth = 2, color = :blue)
+# f
+
+
+
+
+function agent_diffeq_step!(agent, model)
+    agent.yearly_catch = rand(model.rng, Poisson(agent.competence))
+end
+
+function model_diffeq_step!(model)
+    # We step 364 days with this call.
+    OrdinaryDiffEq.step!(model.i, 364.0, true)
+    # Only allow fishing if stocks are high enough
+    model.i.p[2] =
+        model.i.u[1] > model.min_threshold ? sum(a.yearly_catch for a in allagents(model)) :
+        0.0
+    # Notify the integrator that conditions may be altered
+    OrdinaryDiffEq.u_modified!(model.i, true)
+    # Then apply our catch modifier
+    OrdinaryDiffEq.step!(model.i, 1.0, true)
+    # Store yearly stock in the model for plotting
+    model.stock = model.i.u[1]
+    # And reset for the next year
+    model.i.p[2] = 0.0
+    OrdinaryDiffEq.u_modified!(model.i, true)
+end
+
+function initialise_diffeq(;
+    stock = 400.0, # Initial population of fish (lets move to an equilibrium position)
+    max_population = 500.0, # Maximum value of fish stock
+    min_threshold = 60.0, # Regulate fishing if population drops below this value
+    nagents = 50,
 )
+
+    function fish_stock!(ds, s, p, t)
+        max_population, h = p
+        ds[1] = s[1] * (1 - (s[1] / max_population)) - h
+    end
+    prob = OrdinaryDiffEq.ODEProblem(fish_stock!, [stock], (0.0, Inf), [max_population, 0.0])
+    integrator = OrdinaryDiffEq.init(prob, OrdinaryDiffEq.Tsit5(); advance_to_tstop = true)
+
+    model = ABM(
+        Fisher;
+        properties = Dict(
+            :stock => stock,
+            :max_population => max_population,
+            :min_threshold => min_threshold,
+            :i => integrator, # The OrdinaryDiffEq integrator
+        ),
+    )
+    for _ in 1:nagents
+        add_agent!(model, floor(rand(model.rng, truncated(LogNormal(), 1, 6))), 0.0)
+    end
+    model
+end
+
+modeldeq = initialise_diffeq()
+_, resultsdeq = run!(modeldeq, agent_diffeq_step!, model_diffeq_step!, 20; mdata = [:stock])
+
+f = Figure(resolution = (600, 400))
+ax =
+    f[1, 1] = Axis(
+        f,
+        xlabel = "Year",
+        ylabel = "Stock",
+        title = "Fishery Inventory",
+    )
+lines!(ax, resultsdeq.stock, linewidth = 2, color = :blue)
+f
