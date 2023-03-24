@@ -25,6 +25,7 @@ using GeometryBasics
 @from "$(projectdir("src","UpdateClock.jl"))" using UpdateClock
 @from "$(projectdir("src","Initialise.jl"))" using Initialise
 @from "$(projectdir("src","PlottingFunctions.jl"))" using PlottingFunctions
+@from "$(projectdir("src","Visualise.jl"))" using Visualise
 
 
 function modelData(model)
@@ -49,33 +50,12 @@ function clockOscillators(;
 )
 
     properties = @dict tMax couplingThreshold nMacrophage nFibroblast speedMacrophage speedFibroblast extent dt ω λ μ ν ξ nX
+    
     model = initialise(properties)
 
     agentsDF, modelDF = run!(model,agentStep!,modelStep!,ceil(Int64,tMax÷dt); adata=[:pos], mdata=[:diffGrid])
 
-
-    fig1 = Figure(figure_padding=0,resolution=(1000,1000))
-    ax1 = CairoMakie.Axis(fig1[1,1],aspect=DataAspect())
-    uInternal = Observable(zeros(nX,nX))
-    points = Observable(Point2.([(0.0,0.0) for i=1:nMacrophage+nFibroblast]))
-    heatmap!(ax1,uInternal,colorrange=(0, 10.0),colormap=:inferno)
-    scatter!(ax1,points,color=:red)
-    hidedecorations!(ax1)
-    hidespines!(ax1)
-    ax1.title = "t=0.0"
-    ax1.yreversed = true
-    resize_to_layout!(fig1)
-    tSteps = collect(1:ceil(Int64,tMax÷dt))
-    record(fig1,"diff.mp4",tSteps; framerate=10) do i
-        # empty!(ax1)
-        uInternal[] = transpose(reshape(modelDF[i,:diffGrid],(nX,nX)))
-        uInternal[] = uInternal[]
-        points[] = Point2.(agentsDF[(i-1)*(nMacrophage+nFibroblast)+1:i*(nMacrophage+nFibroblast),:pos])
-        points[] = points[]
-        # display(points[])
-    end
-
-    abmvideo("cells.mp4", model, agentStep!; am=cellMarker, as=30.0, ac=cellClockColour, framerate=30, frames=Int64(tMax/dt), title="Cells")
+    visualise(agentsDF,modelDF,model)
 
     return agentsDF, modelDF
 end
