@@ -76,17 +76,15 @@ function model_diffeq_step!(model)
     # We step 364 days with this call.
     OrdinaryDiffEq.step!(model.i, 364.0, true)
     # Only allow fishing if stocks are high enough
-    model.i.p[2] =
-        model.i.u[1] > model.min_threshold ? sum(a.yearly_catch for a in allagents(model)) :
-        0.0
-    # Notify the integrator that conditions may be altered
-    OrdinaryDiffEq.u_modified!(model.i, true)
-    # Then apply our catch modifier
-    OrdinaryDiffEq.step!(model.i, 1.0, true)
+    # model.i.p[2] = model.i.u[1] > model.min_threshold ? sum(a.yearly_catch for a in allagents(model)) : 0.0
+    # # Notify the integrator that conditions may be altered
+    # OrdinaryDiffEq.u_modified!(model.i, true)
+    # # Then apply our catch modifier
+    # OrdinaryDiffEq.step!(model.i, 1.0, true)
     # Store yearly stock in the model for plotting
     model.stock = model.i.u[1]
     # And reset for the next year
-    model.i.p[2] = 0.0
+    # model.i.p[2] = 0.0
     OrdinaryDiffEq.u_modified!(model.i, true)
 end
 
@@ -120,7 +118,7 @@ function initialise_diffeq(;
 end
 
 modeldeq = initialise_diffeq()
-_, resultsdeq = run!(modeldeq, agent_diffeq_step!, model_diffeq_step!, 20; mdata = [:stock])
+a, resultsdeq = run!(modeldeq, agent_diffeq_step!, model_diffeq_step!, 20; mdata = [:stock,:i])
 
 f = Figure(resolution = (600, 400))
 ax =

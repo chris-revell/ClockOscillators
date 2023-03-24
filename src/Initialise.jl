@@ -14,6 +14,8 @@ using DrWatson
 using FromFile
 using UnPack
 using Agents
+using SparseArrays
+using DifferentialEquations
 
 # Local modules
 @from "$(projectdir("src","CellAgents.jl"))" using CellAgents
@@ -25,14 +27,16 @@ function initialise(properties)
     
     @unpack nMacrophage,nFibroblast,speedMacrophage,speedFibroblast,extent,nX = properties
 
-    dx = (extent[2]-extent[1])/nX
-    properties[:diffGrid] = zeros(Float64,(nX,nX))
+    dx = extent[1]/nX
+    diffGrid = zeros(Float64,nX*nX)
     properties[:∇²] = createLaplacian(nX, nX, dx)
-    properties[:xs] = [extent[1]-0.5*dx+i*dx for i=1:nX]
+    # properties[:xs] = [extent[1]-0.5*dx+i*dx for i=1:nX]
 
-    
-    
-    space2d = ContinuousSpace(extent,periodic = false)
+    prob = ODEProblem(ODEFunction(diffusionModel!), diffGrid, (0.0, Inf), properties)
+    properties[:integrator] = init(prob, OrdinaryDiffEq.Tsit5(); advance_to_tstop = true)
+    properties[:diffGrid]   = diffGrid
+
+    space2d = ContinuousSpace(extent,periodic=true)
     model = ABM(Cell, space2d, properties=properties, scheduler=Schedulers.Randomly())
     # Add macrophages    
     for _ in 1:nMacrophage
