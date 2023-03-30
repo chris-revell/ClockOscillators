@@ -17,6 +17,7 @@ using Agents
 using InteractiveDynamics
 using CairoMakie
 using GeometryBasics
+using ColorSchemes
 
 # Local modules
 @from "$(projectdir("src","CellAgents.jl"))" using CellAgents
@@ -30,8 +31,9 @@ function visualise(agentsDF,modelDF,model)
     ax1 = CairoMakie.Axis(fig1[1,1],aspect=DataAspect())
     uInternal = Observable(zeros(nX,nX))
     points = Observable(Point2.([(0.0,0.0) for i=1:nMacrophage+nFibroblast]))
+    clockPhaseColours = Observable(fill(ColorSchemes.romaO.colors[1],nMacrophage+nFibroblast))
     heatmap!(ax1,uInternal,colorrange=(0, 10.0),colormap=:inferno)
-    scatter!(ax1,points,color=:red)
+    scatter!(ax1,points,color=clockPhaseColours,markersize=4, markerspace=:data, marker=cellMarker.(agentsDF[1:nMacrophage+nFibroblast,:type]))
     hidedecorations!(ax1)
     hidespines!(ax1)
     ax1.title = "t=0.0"
@@ -43,6 +45,8 @@ function visualise(agentsDF,modelDF,model)
         uInternal[] = uInternal[]
         points[] = Point2.(agentsDF[(i-1)*(nMacrophage+nFibroblast)+1:i*(nMacrophage+nFibroblast),:pos])
         points[] = points[]
+        clockPhaseColours[] = cellClockColour.(agentsDF[(i-1)*(nMacrophage+nFibroblast)+1:i*(nMacrophage+nFibroblast),:clockPhase])
+        clockPhaseColours[] = clockPhaseColours[]
     end
 
 end

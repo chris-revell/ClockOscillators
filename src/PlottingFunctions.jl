@@ -28,8 +28,22 @@ function cellMarker(c::Cell)
     end
 end
 
+function cellMarker(celltype::Symbol)
+    if celltype==:fibroblast
+        return :diamond
+    elseif celltype==:macrophage
+        return :circle
+    end
+end
+
 function cellClockColour(c::Cell)
     cyclePoint = ceil(Int64,(c.clockPhase/2π)*256)
+    # return ColorSchemes.cyclic_wrwbw_40_90_c42_n256_s25.colors[cyclePoint]
+    return ColorSchemes.romaO.colors[cyclePoint]
+end
+
+function cellClockColour(clockPhase::Float64)
+    cyclePoint = ceil(Int64,(clockPhase/2π)*256)
     # return ColorSchemes.cyclic_wrwbw_40_90_c42_n256_s25.colors[cyclePoint]
     return ColorSchemes.romaO.colors[cyclePoint]
 end

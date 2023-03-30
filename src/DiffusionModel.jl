@@ -21,7 +21,7 @@ function diffusionModel!(du, u, p, t)
     @unpack ∇², nX = p
     du .= -100.0.*∇²*u
     du[ceil(Int64,nX*(nX+1)/2)] += 1000.0
-    du[nX^2] -= 1000.0
+    du .-= exp.(u)
     return du
 end
 
