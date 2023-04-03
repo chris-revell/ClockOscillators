@@ -26,8 +26,8 @@ function createLaplacian(nX, nY, h)
             flattenedIndex = (x-1)*nY+y # Index of grid point (x,y) when 2D array is flattened to a 1D vector
             # Loop over all neighbours of (x,y)
             for i=1:length(dx)
-                xNeighbour = mod(nX+x+dx[i]-1,nX)+1 #arrayLoop(x+dx[i],nX) # Find (x,y) indices of neighbouring grid point, introducing periodicity with arrayLoop
-                yNeighbour = mod(nY+y+dy[i]-1,nY)+1 #arrayLoop(y+dy[i],nY) # Find (x,y) indices of neighbouring grid point, introducing periodicity with arrayLoop
+                xNeighbour = mod(nX+x+dx[i]-1,nX)+1 # Find (x,y) indices of neighbouring grid point, introducing periodicity with mod
+                yNeighbour = mod(nY+y+dy[i]-1,nY)+1 # Find (x,y) indices of neighbouring grid point, introducing periodicity with mod
                 flattenedIndexNeighbour = (xNeighbour-1)*nY + yNeighbour # Convert cartesian index of neighbour to corresponding index within flattened vector 
                 adj[flattenedIndex,flattenedIndexNeighbour] = 1 # Set corresponding component of adj to 1, indicating adjacency in 2D of grid points corresponding to flattenedIndex and flattenedIndexNeighbour
             end
