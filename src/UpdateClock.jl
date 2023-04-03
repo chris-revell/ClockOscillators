@@ -25,7 +25,7 @@ function updateClock(cell,model)
     for n in neighborIDs
         cell.clockPhase = cell.clockPhase + couplingStrength(cell,model[n],model.properties)*sin(model[n].clockPhase-cell.clockPhase)*dt
     end
-    cell.clockPhase = (cell.clockPhase + ω*dt)%2π
+    cell.clockPhase = mod((cell.clockPhase + ω*dt),2π)
 end
 
 export updateClock

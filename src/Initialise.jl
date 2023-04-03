@@ -21,6 +21,7 @@ using DifferentialEquations
 @from "$(projectdir("src","CellAgents.jl"))" using CellAgents
 @from "$(projectdir("src","PlottingFunctions.jl"))" using PlottingFunctions
 @from "$(projectdir("src","CreateLaplacian.jl"))" using CreateLaplacian
+@from "$(projectdir("src","CreateGrad.jl"))" using CreateGrad
 @from "$(projectdir("src","DiffusionModel.jl"))" using DiffusionModel
     
 function initialise(properties)
@@ -28,8 +29,11 @@ function initialise(properties)
     @unpack nMacrophage,nFibroblast,speedMacrophage,speedFibroblast,extent,nX = properties
 
     dx = extent[1]/nX
+    properties[:dx] = dx
     diffGrid = zeros(Float64,nX*nX)
     properties[:∇²] = createLaplacian(nX, nX, dx)
+    properties[:∇] = createGrad(nX, nX, dx)
+
     # properties[:xs] = [extent[1]-0.5*dx+i*dx for i=1:nX]
 
     prob = ODEProblem(ODEFunction(diffusionModel!), diffGrid, (0.0, Inf), properties)
