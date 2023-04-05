@@ -16,12 +16,19 @@ using UnPack
 using LinearAlgebra
 
 # Local modules
+@from "$(projectdir("src","GridPosition.jl"))" using GridPosition
 
 function diffusionModel!(du, u, p, t)
-    @unpack ∇², nX = p
+    @unpack ∇², nX, agents, dx = p
     du .= -100.0.*∇²*u
-    du[ceil(Int64,nX*(nX+1)/2)] += 1000.0
-    # du .-= exp.(u)
+
+    for cell in [cell for cell in agents if cell.type==:macrophage]
+        flattenedIndex = gridPosition(cell.pos,nX,dx)
+        du[flattenedIndex] += 1000.0
+    end 
+
+    du .-= u.^2
+
     return du
 end
 

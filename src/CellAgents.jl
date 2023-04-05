@@ -19,10 +19,11 @@ using Agents
     speed::Float64
     clockPhase::Float64
     polarisation::Tuple
+    neighbours::Vector{Int64}
 end
 
-Macrophage(id, pos, vel, speed, clockPhase) = Cell(id, pos, vel, :macrophage, speed, clockPhase,(0.0,0.0))
-Fibroblast(id, pos, vel, speed, clockPhase) = Cell(id, pos, vel, :fibroblast, speed, clockPhase,(0.0,0.0))
+Macrophage(id, pos, vel, speed, clockPhase) = Cell(id, pos, vel, :macrophage, speed, clockPhase,(0.0,0.0),[])
+Fibroblast(id, pos, vel, speed, clockPhase) = Cell(id, pos, vel, :fibroblast, speed, clockPhase,(0.0,0.0),[])
 
 export Cell, Macrophage, Fibroblast
 

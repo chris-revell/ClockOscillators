@@ -21,8 +21,8 @@ using Agents
 
 function updateClock(cell,model)
     @unpack couplingThreshold, dt, ω = model.properties
-    neighborIDs = nearby_ids(cell, model, couplingThreshold)
-    for n in neighborIDs
+    # neighborIDs = nearby_ids(cell, model, couplingThreshold)
+    for n in cell.neighbours
         cell.clockPhase = cell.clockPhase + couplingStrength(cell,model[n],model.properties)*sin(model[n].clockPhase-cell.clockPhase)*dt
     end
     cell.clockPhase = mod((cell.clockPhase + ω*dt),2π)

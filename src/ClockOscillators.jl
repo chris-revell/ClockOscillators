@@ -53,7 +53,7 @@ function clockOscillators(;
     
     model = initialise(properties)
 
-    agentsDF, modelDF = run!(model,agentStep!,modelStep!,ceil(Int64,tMax÷dt); adata=[:pos, :clockPhase, :type, :polarisation], mdata=[:diffGrid])
+    agentsDF, modelDF = run!(model,agentStep!,modelStep!,ceil(Int64,tMax÷dt); adata=[:pos, :clockPhase, :type, :polarisation, :neighbours], mdata=[:diffGrid])
 
     visualise(agentsDF,modelDF,model)
 

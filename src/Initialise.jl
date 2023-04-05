@@ -33,11 +33,7 @@ function initialise(properties)
     diffGrid = zeros(Float64,nX*nX)
     properties[:∇²] = createLaplacian(nX, nX, dx)
     properties[:∇] = createGrad(nX, nX, dx)
-
     # properties[:xs] = [extent[1]-0.5*dx+i*dx for i=1:nX]
-
-    prob = ODEProblem(ODEFunction(diffusionModel!), diffGrid, (0.0, Inf), properties)
-    properties[:integrator] = init(prob, OrdinaryDiffEq.Tsit5(); advance_to_tstop = true)
     properties[:diffGrid]   = diffGrid
 
     space2d = ContinuousSpace(extent,periodic=true)
@@ -48,12 +44,19 @@ function initialise(properties)
         clockPhase = rand(model.rng)*2π
         add_agent_pos!(Macrophage(nextid(model),Tuple(rand(2).*extent),vel,speedMacrophage,clockPhase), model)
     end
-    
     # Add fibroblasts
     for _ in 1:nFibroblast
         vel = Tuple(rand(model.rng, 2).-0.5)
         clockPhase = rand(model.rng)*2π
         add_agent_pos!(Fibroblast(nextid(model),Tuple(rand(2).*extent),vel,speedFibroblast,clockPhase), model)
+    end
+
+    properties[:agents] = collect(allagents(model))
+    prob = ODEProblem(ODEFunction(diffusionModel!), diffGrid, (0.0, Inf), properties)
+    properties[:integrator] = init(prob, OrdinaryDiffEq.Tsit5(); advance_to_tstop = true)
+
+    for cell in allagents(model)
+        cell.neighbours = collect(nearby_ids(cell, model, model.couplingThreshold))
     end
 
     return model
