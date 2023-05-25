@@ -30,13 +30,13 @@ function initialise(properties)
 
     dx = extent[1]/nX
     properties[:dx] = dx
-    diffGrid = zeros(Float64,nX*nX)
+    diffGrid = zeros(Float64,(nX+4)*(nX+4))
     properties[:∇²] = createLaplacian(nX, nX, dx)
     properties[:∇] = createGrad(nX, nX, dx)
     # properties[:xs] = [extent[1]-0.5*dx+i*dx for i=1:nX]
     properties[:diffGrid]   = diffGrid
 
-    space2d = ContinuousSpace(extent,periodic=true)
+    space2d = ContinuousSpace(extent,periodic=false)
     model = ABM(Cell, space2d, properties=properties, scheduler=Schedulers.Randomly())
     # Add macrophages    
     for _ in 1:nMacrophage
@@ -55,8 +55,13 @@ function initialise(properties)
     prob = ODEProblem(ODEFunction(diffusionModel!), diffGrid, (0.0, Inf), properties)
     properties[:integrator] = init(prob, OrdinaryDiffEq.Tsit5(); advance_to_tstop = true)
 
-    for cell in allagents(model)
-        cell.neighbours = collect(nearby_ids(cell, model, model.couplingThreshold))
+    properties[:pairs] = Tuple{Int64,Int64}[]
+
+    for iCell in allids(model)
+        neighbours = collect(nearby_ids(model.agents[iCell], model, model.couplingThreshold))
+        for jCell in neighbours 
+            (min(iCell,jCell),max(iCell,jCell)) ∉ properties[:pairs] ? push!(properties[:pairs], (min(iCell,jCell),max(iCell,jCell))) : nothing
+        end
     end
 
     return model

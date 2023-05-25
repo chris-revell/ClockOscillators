@@ -18,6 +18,7 @@ using Agents
 # Local modules
 @from "$(projectdir("src","CellAgents.jl"))" using CellAgents
 
+# return coupling strength for the effect of cell2 clock on cell1 clock 
 function couplingStrength(cell1,cell2,properties)
     @unpack λ, μ, ν, ξ = properties
     if cell1.type==:fibroblast && cell2.type==:fibroblast

@@ -25,7 +25,7 @@ using ColorSchemes
 
 function visualise(agentsDF,modelDF,model)
 
-    @unpack nX, nMacrophage, nFibroblast, tMax, dt, dx, extent = model.properties
+    @unpack nX, nMacrophage, nFibroblast, tMax, dt, dx, extent, nOutputs = model.properties
 
     fig1 = Figure(figure_padding=0,resolution=(1000,1000))
     ax1 = CairoMakie.Axis(fig1[1,1],aspect=DataAspect())
@@ -40,15 +40,18 @@ function visualise(agentsDF,modelDF,model)
         xs[(i-1)*nX+1:i*nX] .= gridValRange
         ys[i:nX:nX*nX] .= gridValRange
     end
-    heatmap!(ax1,xs,ys,uInternal,colorrange=(0, 10.0),colormap=:inferno)
-    scatter!(ax1,points,color=clockPhaseColours,markersize=1, markerspace=:data, marker=cellMarker.(agentsDF[1:nMacrophage+nFibroblast,:type]))
+    heatmap!(ax1,xs,ys,uInternal,colorrange=(0, 1.0),colormap=:bilbao)
+    scatter!(ax1,points,color=clockPhaseColours,markersize=5, markerspace=:data, marker=cellMarker.(agentsDF[1:nMacrophage+nFibroblast,:type]))
     arrows!(ax1,points,arrowsVec)
+
+    
+
     # hidedecorations!(ax1)
     # hidespines!(ax1)
     ax1.title = "t=0.0"
     ax1.yreversed = true
     resize_to_layout!(fig1)
-    tSteps = collect(1:ceil(Int64,tMax÷dt))
+    tSteps = collect(1:nOutputs)
     record(fig1,"animation.mp4",tSteps; framerate=10) do i
         uInternal[] = modelDF[i,:diffGrid]
         uInternal[] = uInternal[]

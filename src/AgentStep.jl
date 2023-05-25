@@ -23,15 +23,16 @@ using SparseArrays
 @from "$(projectdir("src","GridPosition.jl"))" using GridPosition
 
 function agentStep!(cell, model)
+    
     @unpack ∇, diffGrid, dx, nX, dt = model.properties
     # Update agent's internal clock based on system state
     updateClock(cell,model)
     
     if cell.type == :fibroblast
         # Sample background gradient
-        flattenedIndex = gridPosition(cell.pos,nX,dx)
-        neighbours = findnz(∇[flattenedIndex,:])[1]    
-        polarisation = -1.0.*[diffGrid[neighbours[1]]-diffGrid[neighbours[4]], diffGrid[neighbours[2]]-diffGrid[neighbours[3]]]    
+        flattenedIndex = gridPosition(cell.pos,nX+4,dx)
+        neighboursGridPoints = findnz(∇[flattenedIndex,:])[1]    
+        polarisation = -1.0.*[diffGrid[neighboursGridPoints[1]]-diffGrid[neighboursGridPoints[4]], diffGrid[neighboursGridPoints[2]]-diffGrid[neighboursGridPoints[3]]]    
         cell.polarisation = Tuple(polarisation)
         direction = normalize(10.0.*polarisation.+rand(model.rng,2).-0.5)
         cell.vel = Tuple(direction.*cell.speed)

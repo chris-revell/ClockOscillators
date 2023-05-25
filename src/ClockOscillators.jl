@@ -25,7 +25,7 @@ using GeometryBasics
 @from "$(projectdir("src","UpdateClock.jl"))" using UpdateClock
 @from "$(projectdir("src","Initialise.jl"))" using Initialise
 @from "$(projectdir("src","PlottingFunctions.jl"))" using PlottingFunctions
-@from "$(projectdir("src","Visualise.jl"))" using Visualise
+@from "$(projectdir("src","Visualise2.jl"))" using Visualise2
 
 
 function modelData(model)
@@ -41,21 +41,46 @@ function clockOscillators(;
     speedFibroblast=100.0, 
     extent=(100, 100), 
     dt=0.01, 
+    D = -100.0,
     ω=2π, 
     λ=0.1, 
     μ=1.0, 
     ν=1.0, 
     ξ=0.1, 
-    nX=100, 
+    nX=200, 
+    nOutputs = 100,
 )
 
-    properties = @dict tMax couplingThreshold nMacrophage nFibroblast speedMacrophage speedFibroblast extent dt ω λ μ ν ξ nX
+    properties = @dict tMax couplingThreshold nMacrophage nFibroblast speedMacrophage speedFibroblast extent dt D ω λ μ ν ξ nX nOutputs
     
+    nMax = ceil(Int64,tMax÷dt)
+
+    outputInterval = tMax/nOutputs
+    outputInterval<=dt ? throw("Output interval <= dt") : nothing
+    properties[:outputInterval] = outputInterval
+
     model = initialise(properties)
 
-    agentsDF, modelDF = run!(model,agentStep!,modelStep!,ceil(Int64,tMax÷dt); adata=[:pos, :clockPhase, :type, :polarisation, :neighbours], mdata=[:diffGrid])
+    adata=[:pos, :clockPhase, :type, :neighbours]
+    mdata=[:diffGrid]
 
-    visualise(agentsDF,modelDF,model)
+    agentsDF = init_agent_dataframe(model, adata)
+    modelDF = init_model_dataframe(model, mdata)
+
+    s = [0]
+    while s[1]<nMax
+        if mod(s[1]*dt+0.0000001,outputInterval)<dt
+            collect_agent_data!(agentsDF, model, adata, s[1])
+            collect_model_data!(modelDF, model, mdata, s[1])
+        end
+        Agents.step!(model, agentStep!, modelStep!, 1)
+        s[1] += 1
+    end
+    # return agentsDF, modelDF
+
+    # agentsDF, modelDF = run!(model,agentStep!,modelStep!,ceil(Int64,tMax÷dt); adata=[:pos, :clockPhase, :type, :polarisation, :neighbours], mdata=[:diffGrid])
+
+    visualise2(agentsDF,modelDF,model)
 
     return agentsDF, modelDF
 end
