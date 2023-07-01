@@ -21,6 +21,7 @@ using SparseArrays
 @from "$(projectdir("src","CellAgents.jl"))" using CellAgents
 @from "$(projectdir("src","UpdateClock.jl"))" using UpdateClock
 @from "$(projectdir("src","GridPosition.jl"))" using GridPosition
+@from "$(projectdir("src","LennardJonesDerivative.jl"))" using LennardJonesDerivative
 
 function agentStep!(cell, model)
     
@@ -40,7 +41,16 @@ function agentStep!(cell, model)
         direction = normalize(rand(model.rng,2).-0.5)
         cell.vel = Tuple(direction.*cell.speed)
     end
-    
+
+    for n in cell.neighbours
+        sep = cell.pos.-getindex(model,n).pos
+        display(dLJ(norm(sep),2.0).*sep./norm(sep))
+        if norm(sep)<2.0
+            display(dLJ(norm(sep),2.0).*sep./norm(sep))
+            cell.vel = cell.vel #.+ dLJ(norm(sep),2.0).*sep./norm(sep)
+        end
+    end
+
     move_agent!(cell, model, dt)
     
     cell.neighbours = collect(nearby_ids(cell, model, model.couplingThreshold))

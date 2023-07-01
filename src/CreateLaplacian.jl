@@ -5,8 +5,7 @@
 #  Created by Christopher Revell on 22/03/2023.
 #
 #
-# In place Laplacian function
-# In order to construct the linear operator and nonlinear function, we first define the Laplacian operator for this domain as $\nabla^2 = (\mathcal{J}-\mathcal{D})/h^2$ where $\mathcal{J}$ and $\mathcal{D}$ are the adjacency and degree matrices respectively using a Von Neumann neighbourhood 5-point stencil, and $h$ is the distance between adjacent grid points.  
+# Laplacian operator with 2 rows and 2 columns of ghost points on each side to ensure a no-flux boundary condition
 
 
 module CreateLaplacian

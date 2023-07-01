@@ -39,7 +39,7 @@ end
 function cellClockColour(c::Cell)
     cyclePoint = ceil(Int64,(c.clockPhase/2π)*256)
     # return ColorSchemes.cyclic_wrwbw_40_90_c42_n256_s25.colors[cyclePoint]
-    return ColorSchemes.romaO.colors[cyclePoint]
+    return ColorSchemes.vikO.colors[cyclePoint]
 end
 
 function cellClockColour(clockPhase::Float64)

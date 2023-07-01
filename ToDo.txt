@@ -6,8 +6,3 @@
 
 - It seems that immune cells move at different speeds depending on their phase. Is that a possible parameter to model with these agents? This speed immune cell speed phenomenon is based on published data and matches what I'm seeing in my own experiments.
 
-
-
-
-
-- Save data at less frequent intervals

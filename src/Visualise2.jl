@@ -18,6 +18,7 @@ using InteractiveDynamics
 using CairoMakie
 using GeometryBasics
 using ColorSchemes
+using Format
 
 # Local modules
 @from "$(projectdir("src","CellAgents.jl"))" using CellAgents
@@ -45,8 +46,10 @@ function visualise2(agentsDF,modelDF,model)
     clockPhaseColours = fill(ColorSchemes.romaO.colors[1],nMacrophage+nFibroblast)
     for i=1:nOutputs
         empty!(ax1)
-        ax1.title = "$(i*outputInterval)"
-        heatmap!(ax1,xs,ys,modelDF[i,:diffGrid],colorrange=(0, 1.0),colormap=:bilbao)
+        ax1.title = "$(format(i*outputInterval,precision=2))"
+        heatmap!(ax1,xs,ys,modelDF[i,:diffGrid],colorrange=(0, 2.0),colormap=:bilbao)
+        xlims!(ax1,(0,extent[2]))
+        ylims!(ax1,(0,extent[1]))
         points .= Point2.(last.(agentsDF[(i-1)*(nMacrophage+nFibroblast)+1:i*(nMacrophage+nFibroblast),:pos]),first.(agentsDF[(i-1)*(nMacrophage+nFibroblast)+1:i*(nMacrophage+nFibroblast),:pos]))
         clockPhaseColours .= cellClockColour.(agentsDF[(i-1)*(nMacrophage+nFibroblast)+1:i*(nMacrophage+nFibroblast),:clockPhase])
         scatter!(ax1,points,color=clockPhaseColours,markersize=5, markerspace=:data, marker=cellMarker.(agentsDF[1:nMacrophage+nFibroblast,:type]))

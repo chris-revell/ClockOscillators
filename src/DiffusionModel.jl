@@ -33,18 +33,21 @@ function diffusionModel!(du, u, p, t)
     
     # Diffusion component of du (du .= -D.*∇²*u)
     mul!(du,∇²,u)
-    # du .*= -D
+    du .*= D
 
     # Degradation component of du
-    du .= D.*du .- u.^2
+    du .-= u.^2
 
-    # Source component of du
-    for cell in agents
-        if cell.type==:macrophage
-            flattenedIndex = gridPosition(cell.pos,nX+4,dx)
-            du[flattenedIndex] += 1000.0
-        end
-    end 
+    du[ceil(Int64,((nX+4)^2)/2+nX/2+2)] += 1000.0
+
+
+    # Source component of du from macrophages
+    # for cell in agents
+    #     if cell.type==:macrophage
+    #         flattenedIndex = gridPosition(cell.pos,nX+4,dx)
+    #         du[flattenedIndex] += 1000.0
+    #     end
+    # end 
 
     return du
 end
