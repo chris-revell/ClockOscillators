@@ -91,7 +91,7 @@ hidedecorations!(axPhase)
 
 # Add static system diagram to canvas
 axDiagram = Axis(ga[2,2],title="System diagram",aspect=DataAspect())
-image!(axDiagram,rotr90(load("_research/ClockOscillators.png")))
+image!(axDiagram,rotr90(load("supplementary/ClockOscillators.png")))
 hidedecorations!(axDiagram)
 
 # Set up phase line plot
