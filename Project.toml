@@ -1,4 +1,7 @@
 name = "ClockOscillators"
+uuid = "e01235c3-c339-4d00-a2dd-caa3be4ce311"
+authors = ["Christopher Revell <christopher.revell@manchester.ac.uk>"]
+version = "0.1.0"
 
 [deps]
 Agents = "46ada45e-f475-11e8-01d0-f70cc89e6671"
