@@ -121,19 +121,27 @@ lines!(axLine, mPhaseLine; color=:blue, linewidth=4, alpha=0.75)
 
 
 # Set up parameter sliders
-lsgrid = labelslidergrid!(
-    fig,
-    ["ω0", "ωF", "ωM", "ϕF", "ϕM", "μ", "ν", "αF", "αM", "ψF", "ψM"],
-    [0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:2, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:10.0, 0:0.1:2, 0:0.1:2];
-    formats = [x -> "$(round(x, digits = 1))$s" for s in ["π", "π", "π", "π", "π", "", "", "", "", "π", "π"]],
-)
-ga[3, 2] = lsgrid.layout
-# Set default slider values
-defaults = [2.0, 2.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-set_close_to!.(lsgrid.sliders, defaults)
-# Pull parameters from slider positions [ω0, ωF, ωM, ϕF, ϕM, μ, ν, αF, αM, ψF, ψM]
-sliderobservables = [s.value for s in lsgrid.sliders]
+lsgrid = SliderGrid(
+		ga[3, 2],
+        (label="ω0" , range=0:0.1:2, startvalue=2.0, format="{:.1f}π"),
+        (label="ωF" , range=0:0.1:2, startvalue=2.0, format="{:.1f}π"),
+        (label="ωM" , range=0:0.1:2, startvalue=2.0, format="{:.1f}π"),
+        (label="ϕF" , range=0:0.1:2, startvalue=0.0, format="{:.1f}π"),
+        (label="ϕM" , range=0:0.1:2, startvalue=0.0, format="{:.1f}π"),
+        (label="μ"  , range=0:0.1:10.0, startvalue=0.0, format="{:.1f}"),
+        (label="ν"  , range=0:0.1:10.0, startvalue=0.0, format="{:.1f}"),
+        (label="αF" , range=0:0.1:10.0, startvalue=0.0, format="{:.1f}"),
+        (label="αM" , range=0:0.1:10.0, startvalue=0.0, format="{:.1f}"),
+        (label="ψF" , range=0:0.1:2, startvalue=0.0, format="{:.1f}π"),
+        (label="ψM" , range=0:0.1:2, startvalue=0.0, format="{:.1f}π"),
+        width = 350,
+        # tellheight=true,
+    )
 
+# Pull parameters from slider positions [ω0, ωF, ωM, ϕF, ϕM, μ, ν, αF, αM, ψF, ψM]
+sliderobservables = lift([s.value for s in lsgrid.sliders]...) do values...
+	[values...]
+end
 
 # Initial conditions
 u0   = rand(3).*(2π) # Initial phases (Sunlight, fibroblast, macrophage)
@@ -148,13 +156,14 @@ lines!(axPhase, hands; linewidth = 4, color = :black)
 scatter!(axPhase, dots; marker=[:star8,:circle,:circle],color=[:red,:green,:blue],markersize=48)
 
 # Set up differential equation integrator
-prob = ODEProblem(model!,u0,(0.0,10000.0),sliderobservables)
-dp = ContinuousDynamicalSystem(prob)
-# Solve diffeq with constant step for smoother curves
-diffeq = (alg = Tsit5(), adaptive = false, dt = δt)
-# Set up integrator for each iteration
-integ = integrator(dp, u0; diffeq...)
+prob = ODEProblem(model!,u0,(0.0,Inf),[2.0,2.0,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0])
 
+# Set up integrator for each iteration
+integ = init(prob, Tsit5(), adaptive = false, dt = δt)
+
+on(sliderobservables) do sliderVals
+	integ.p .= sliderVals
+end
 
 # Add stop/start button to the top of the canvas
 run = Button(ga[1,1:2]; label = "Start/Stop", tellwidth = false)
@@ -164,7 +173,7 @@ on(run.clicks) do clicks
     @async while isrunning[]
         isopen(fig.scene) || break # ensures computations stop if closed window
         animstep!(integ, dots, hands, sunPhaseLine)
-        sleep(0.02) # or `yield()` instead
+        sleep(0.02) 
     end
 end
 
