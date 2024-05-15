@@ -10,6 +10,8 @@ using DifferentialEquations
 using GLMakie
 using DataStructures: CircularBuffer
 
+δt = 0.005
+
 # Function defining ODEs for model
 function model!(du, u, p, t)
 	ω, μ, ν = p
@@ -59,16 +61,16 @@ for i=1:lineLength
 end
 phaseLine1 = Observable(phaseLine1)
 phaseLine2 = Observable(phaseLine2)
-lines!(axLine, phaseLine1; color=:red, linewidth=4, alpha=1.0)
-lines!(axLine, phaseLine2; color=:green, linewidth=4, alpha=1.0)
+lines!(axLine, phaseLine1; color=:green, linewidth=4, alpha=1.0)
+lines!(axLine, phaseLine2; color=:blue, linewidth=4, alpha=1.0)
 
 
 # Set up parameter sliders
 lsgrid = SliderGrid(
 		fig[2, :],
         (label="ω (blue intrinsic frequency / green intrinsic frequency)" , range=10.0:0.1:14.0, startvalue=10.0, format="{:.1f}"),
-        (label="μ (dependence of green on blue)"  , range=0:0.1:10.0, startvalue=0.0, format="{:.1f}"),
-        (label="ν (dependence of blue on green)"  , range=0:0.1:10.0, startvalue=0.0, format="{:.1f}"),
+        (label="μ (dependence of green on blue)"  , range=0:0.1:100.0, startvalue=0.0, format="{:.1f}"),
+        (label="ν (dependence of blue on green)"  , range=0:0.1:100.0, startvalue=0.0, format="{:.1f}"),
         width = 1400,
     )
 
@@ -78,11 +80,10 @@ sliderobservables = lift([s.value for s in lsgrid.sliders]...) do values...
 end
 
 # Initial conditions
-δt = 0.005
 u0   = rand(2).*(2π) # Initial phases (Sunlight, fibroblast, macrophage)
 
 # Plot initial conditions as a vector of observable points.
-xys = [sin(integ.u[1]), cos(integ.u[1]), sin(integ.u[2]), cos(integ.u[2])] # Convert phases to xy coordinates
+xys = [sin(u0[1]), cos(u0[1]), sin(u0[2]), cos(u0[2])] # Convert phases to xy coordinates
 dots = Observable([Point{2,Float64}(xys[1:2]...), Point{2,Float64}(xys[3:4]...)])
 hands= Observable([Point{2,Float64}(xys[1:2]...), Point{2,Float64}(0,0), Point{2,Float64}(xys[3:4]...)])
 lines!(axPhase, hands; linewidth = 4, color = :black)
