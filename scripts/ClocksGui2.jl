@@ -6,7 +6,7 @@
 #
 #
 
-using DifferentialEquations
+using OrdinaryDiffEq
 using GLMakie
 using DataStructures: CircularBuffer
 
